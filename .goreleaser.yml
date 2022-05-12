@@ -1,0 +1,19 @@
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: spinup-user
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+release:
+  prerelease: auto
+  name_template: "{{.ProjectName}}-v{{.Version}}"
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksum.txt"

@@ -26,7 +26,7 @@ var addCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		fmt.Println("Paste one or more SSH public keys for this user: ")
+		fmt.Println("Paste one or more SSH public keys for this user (hit Enter when done): ")
 		scanner := bufio.NewScanner(os.Stdin)
 		for {
 			scanner.Scan()

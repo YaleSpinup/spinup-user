@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -31,7 +30,7 @@ func Create(username string) error {
 	useraddCmd := exec.Command("useradd", useraddArgs...)
 	useraddCmd.Stderr = os.Stderr
 
-	log.Printf("running command: %v", useraddCmd)
+	// log.Printf("running command: %v", useraddCmd)
 
 	if err := useraddCmd.Run(); err != nil {
 		return err
@@ -58,7 +57,7 @@ func Delete(username string, removeHomedir bool) error {
 	userdelCmd := exec.Command("userdel", userdelArgs...)
 	userdelCmd.Stderr = os.Stderr
 
-	log.Printf("running command: %v", userdelCmd)
+	// log.Printf("running command: %v", userdelCmd)
 
 	if err := userdelCmd.Run(); err != nil {
 		return err

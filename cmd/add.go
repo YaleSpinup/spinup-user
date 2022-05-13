@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var shell string
+
 var addCmd = &cobra.Command{
 	Use:   "add [username]",
 	Short: "Add a new user and set SSH authorized keys",
@@ -26,7 +28,7 @@ var addCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		fmt.Println("Paste one or more SSH public keys for this user: ")
+		fmt.Println("Paste one or more SSH public keys for this user (hit Enter when done): ")
 		scanner := bufio.NewScanner(os.Stdin)
 		for {
 			scanner.Scan()
@@ -54,7 +56,7 @@ var addCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := user.Create(username); err != nil {
+		if err := user.Create(username, shell); err != nil {
 			fmt.Printf("\nfailed to add new user: %s\n", err)
 			os.Exit(1)
 		}
@@ -64,9 +66,13 @@ var addCmd = &cobra.Command{
 			// TODO: delete user
 			os.Exit(1)
 		}
+
+		fmt.Printf("Added user %s\n", username)
 	},
 }
 
 func init() {
+	addCmd.PersistentFlags().StringVarP(&shell, "shell", "s", "/bin/bash", "login shell for the user")
+
 	rootCmd.AddCommand(addCmd)
 }

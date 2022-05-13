@@ -26,11 +26,15 @@ Use "spinup-user [command] --help" for more information about a command.
 
 ### Adding a user
 
+Note that password authentication is not supported and you have to specify at least one public SSH key (for authorized_keys).
+By default the `/bin/bash` shell is used but you can overide it with `--shell`
+
 ```
 $ sudo spinup-user add alice
 Paste one or more SSH public keys for this user (hit Enter when done):
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHSp/eBwht3KW6Kf6TQ+GTmubWYiaFfxf0BIKYq+4mDO
 
+Added user alice
 ```
 
 ### Listing users
@@ -61,6 +65,7 @@ This will also remove the user's home directory, but you can add `-k` if you wan
 
 ```
 $ sudo spinup-user remove alice
+Removed user alice
 ```
 
 ## Author

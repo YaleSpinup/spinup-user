@@ -15,9 +15,13 @@ import (
 )
 
 // Create uses the useradd executable to create a new Linux user
-func Create(username string) error {
-	if username == "" {
-		return errors.New("username cannot be empty")
+func Create(username, shell string) error {
+	if username == "" || shell == "" {
+		return errors.New("username and shell cannot be empty")
+	}
+
+	if !contains(shells(), shell) {
+		return errors.New("invalid shell, valid options are: " + strings.Join(shells(), " "))
 	}
 
 	if _, err := exec.LookPath("useradd"); err != nil {
@@ -25,7 +29,7 @@ func Create(username string) error {
 	}
 
 	homeDir := "/home/" + username
-	useraddArgs := []string{"-m", "-d", homeDir, username}
+	useraddArgs := []string{"--create-home", "--home-dir", homeDir, "--shell", shell, username}
 
 	useraddCmd := exec.Command("useradd", useraddArgs...)
 	useraddCmd.Stderr = os.Stderr
@@ -82,12 +86,6 @@ func Get(username string) (*user.User, error) {
 
 // List gets a list of all "human" Linux users
 func List() ([]string, error) {
-	// get a list of shells that could be used by users
-	shells := []string{"/bin/sh", "/bin/bash", "/bin/csh"}
-	if shellsBytes, err := ioutil.ReadFile("/etc/shells"); err == nil {
-		shells = strings.Split(strings.TrimSpace(string(shellsBytes)), "\n")
-	}
-
 	var users []string
 
 	file, err := os.Open("/etc/passwd")
@@ -114,7 +112,7 @@ func List() ([]string, error) {
 
 		// only pick users that have a valid shell in /etc/passwd
 		// e.g. tester:x:1000:1000::/home/tester:/bin/bash
-		if contains(shells, passwdFields[len(passwdFields)-1]) && passwdFields[0] != "root" {
+		if contains(shells(), passwdFields[len(passwdFields)-1]) && passwdFields[0] != "root" {
 			users = append(users, passwdFields[0])
 		}
 	}
@@ -194,11 +192,24 @@ func ValidAuthorizedKey(key string) bool {
 	return true
 }
 
+// contains returns true if the list contains the given string
 func contains(list []string, s string) bool {
 	for _, l := range list {
 		if l == s {
 			return true
 		}
 	}
+
 	return false
+}
+
+// shells returns a list of valid shells
+func shells() []string {
+	shells := []string{"/bin/sh", "/bin/bash", "/bin/csh"}
+
+	if shellsBytes, err := ioutil.ReadFile("/etc/shells"); err == nil {
+		shells = strings.Split(strings.TrimSpace(string(shellsBytes)), "\n")
+	}
+
+	return shells
 }

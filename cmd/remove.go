@@ -34,6 +34,8 @@ var removeCmd = &cobra.Command{
 			fmt.Printf("\nfailed to remove user: %s\n", err)
 			os.Exit(1)
 		}
+
+		fmt.Printf("Removed user %s\n", username)
 	},
 }
 

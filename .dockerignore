@@ -1,0 +1,6 @@
+.gitignore
+.goreleaser.yml
+.git/
+.github/
+k8s/
+skaffold.yaml

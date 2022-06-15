@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spinup-user
+  labels:
+    app: spinup-user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spinup-user
+  template:
+    metadata:
+      labels:
+        app: spinup-user
+    spec:
+      containers:
+      - name: spinup-user
+        image: spinup-user
+        command: ['sh', '-c', 'while true; do sleep 60; done']

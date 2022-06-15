@@ -35,6 +35,10 @@ var removeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		if err := user.RemoveSudo(username); err != nil {
+			fmt.Printf("\nfailed to clean up sudoers: %s\n", err)
+		}
+
 		fmt.Printf("Removed user %s\n", username)
 	},
 }

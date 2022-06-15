@@ -14,6 +14,31 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type Details struct {
+	Admin    bool
+	Username string
+	HomeDir  string
+	Uid      string
+	Gid      string
+}
+
+func (d Details) String() string {
+	return fmt.Sprintf("Username: %s\nAdmin: %t\nHomedir: %s\nUID: %s\nGID: %s\n", d.Username, d.Admin, d.HomeDir, d.Uid, d.Gid)
+}
+
+type ListItem struct {
+	Username string
+	Admin    bool
+}
+
+func (li ListItem) String() string {
+	if li.Admin {
+		return fmt.Sprintf("%s (admin)", li.Username)
+	} else {
+		return li.Username
+	}
+}
+
 // Create uses the useradd executable to create a new Linux user
 func Create(username, shell string) error {
 	if username == "" || shell == "" {
@@ -71,7 +96,7 @@ func Delete(username string, removeHomedir bool) error {
 }
 
 // Get returns information about the specified user
-func Get(username string) (*user.User, error) {
+func Get(username string) (*Details, error) {
 	if username == "" {
 		return nil, errors.New("username cannot be empty")
 	}
@@ -81,12 +106,26 @@ func Get(username string) (*user.User, error) {
 		return nil, errors.New("unable to get user information for " + username)
 	}
 
-	return user, nil
+	admin, err := HasSudo(username)
+	if err != nil {
+		return nil, err
+	}
+
+	details := Details{
+		Admin:    admin,
+		Username: user.Username,
+		HomeDir:  user.HomeDir,
+		Uid:      user.Uid,
+		Gid:      user.Gid,
+	}
+
+	return &details, nil
 }
 
 // List gets a list of all "human" Linux users
-func List() ([]string, error) {
+func List() ([]ListItem, error) {
 	var users []string
+	userList := []ListItem{}
 
 	file, err := os.Open("/etc/passwd")
 	if err != nil {
@@ -120,7 +159,15 @@ func List() ([]string, error) {
 		return nil, err
 	}
 
-	return users, nil
+	for _, u := range users {
+		admin, err := HasSudo(u)
+		if err != nil {
+			return nil, err
+		}
+		userList = append(userList, ListItem{Username: u, Admin: admin})
+	}
+
+	return userList, nil
 }
 
 // AuthorizedKeys gets the SSH authorized keys for the given Linux user
@@ -134,7 +181,16 @@ func AuthorizedKeys(username string) ([]string, error) {
 		return nil, errors.New("unable to get user information for " + username)
 	}
 
-	keys, err := ioutil.ReadFile(user.HomeDir + "/.ssh/authorized_keys")
+	keysFile := fmt.Sprintf("%s/.ssh/authorized_keys", user.HomeDir)
+
+	_, err = os.Stat(keysFile)
+	if os.IsNotExist(err) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	keys, err := ioutil.ReadFile(keysFile)
 	if err != nil {
 		return nil, err
 	}

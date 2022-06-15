@@ -1,0 +1,18 @@
+apiVersion: skaffold/v2beta28
+kind: Config
+metadata:
+  name: spinup-user
+build:
+  local: {}
+  artifacts:
+  - image: spinup-user
+    docker:
+      dockerfile: k8s/Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - k8s/deployment.yaml
+    hooks:
+      after:
+        - host:
+            command: ["kubectl", "get", "pods", "--selector", "app=spinup-user"]

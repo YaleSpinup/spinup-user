@@ -39,7 +39,7 @@ var listCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			fmt.Printf("Username: %s\nHomedir: %s\nUID: %s\nGID: %s\n", u.Username, u.HomeDir, u.Uid, u.Gid)
+			fmt.Println(u)
 
 			keys, err := user.AuthorizedKeys(args[0])
 			if err != nil {
@@ -47,6 +47,9 @@ var listCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
+			if keys == nil {
+				keys = []string{"NOT SET"}
+			}
 			fmt.Printf("Authorized keys:\n%s\n", strings.Join(keys, "\n"))
 		}
 	},

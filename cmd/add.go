@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var admin, nokeys bool
 var shell string
 
 var addCmd = &cobra.Command{
@@ -28,29 +29,31 @@ var addCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		fmt.Println("Paste one or more SSH public keys for this user (hit Enter when done): ")
-		scanner := bufio.NewScanner(os.Stdin)
-		for {
-			scanner.Scan()
-			line := scanner.Text()
-			if len(line) == 0 {
-				break
+		if !nokeys {
+			fmt.Println("Paste one or more SSH public keys for this user (hit Enter when done): ")
+			scanner := bufio.NewScanner(os.Stdin)
+			for {
+				scanner.Scan()
+				line := scanner.Text()
+				if len(line) == 0 {
+					break
+				}
+
+				if !user.ValidAuthorizedKey(line) {
+					fmt.Printf("\ninvalid public key specified:\n%s\n", line)
+					os.Exit(1)
+				}
+
+				pubKeys = append(pubKeys, line)
+			}
+			if err := scanner.Err(); err != nil {
+				return err
 			}
 
-			if !user.ValidAuthorizedKey(line) {
-				fmt.Printf("\ninvalid public key specified:\n%s\n", line)
+			if len(pubKeys) == 0 {
+				fmt.Print("no public key specified\n")
 				os.Exit(1)
 			}
-
-			pubKeys = append(pubKeys, line)
-		}
-		if err := scanner.Err(); err != nil {
-			return err
-		}
-
-		if len(pubKeys) == 0 {
-			fmt.Print("no public key specified\n")
-			os.Exit(1)
 		}
 
 		return nil
@@ -61,18 +64,31 @@ var addCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if err := user.UpdateAuthorizedKeys(username, pubKeys); err != nil {
-			fmt.Printf("\nfailed to set authorized_keys: %s\n", err)
-			// TODO: delete user
-			os.Exit(1)
+		if !nokeys {
+			if err := user.UpdateAuthorizedKeys(username, pubKeys); err != nil {
+				fmt.Printf("\nfailed to set authorized_keys: %s\n", err)
+				// TODO: delete user
+				os.Exit(1)
+			}
 		}
 
-		fmt.Printf("Added user %s\n", username)
+		if admin {
+			if err := user.UpdateSudo(username, admin); err != nil {
+				fmt.Printf("\nfailed to set sudo privileges: %s\n", err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("Added admin user %s\n", username)
+		} else {
+			fmt.Printf("Added user %s\n", username)
+		}
 	},
 }
 
 func init() {
 	addCmd.PersistentFlags().StringVarP(&shell, "shell", "s", "/bin/bash", "login shell for the user")
+	addCmd.PersistentFlags().BoolVarP(&admin, "admin", "a", false, "make this an admin user with full sudo privileges")
+	addCmd.PersistentFlags().BoolVarP(&nokeys, "no-ssh", "", false, "skip setting ssh authorized keys for the user")
 
 	rootCmd.AddCommand(addCmd)
 }

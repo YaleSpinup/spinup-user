@@ -1,4 +1,4 @@
-package user
+package linuxuser
 
 import (
 	"bufio"

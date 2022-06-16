@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/YaleSpinup/spinup-user/pkg/user"
+	"github.com/YaleSpinup/spinup-user/pkg/linuxuser"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ var listCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			// get a list of all human users
-			users, err := user.List()
+			users, err := linuxuser.List()
 			if err != nil {
 				fmt.Printf("error listing users: %s\n", err)
 				os.Exit(1)
@@ -33,7 +33,7 @@ var listCmd = &cobra.Command{
 			}
 		} else {
 			// get information about a specific user
-			u, err := user.Get(args[0])
+			u, err := linuxuser.Get(args[0])
 			if err != nil {
 				fmt.Printf("\nfailed to get user: %s\n", err)
 				os.Exit(1)
@@ -41,7 +41,7 @@ var listCmd = &cobra.Command{
 
 			fmt.Println(u)
 
-			keys, err := user.AuthorizedKeys(args[0])
+			keys, err := linuxuser.AuthorizedKeys(args[0])
 			if err != nil {
 				fmt.Printf("\nfailed to get authorized_keys: %s\n", err)
 				os.Exit(1)

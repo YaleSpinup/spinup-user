@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/YaleSpinup/spinup-user/pkg/user"
+	"github.com/YaleSpinup/spinup-user/pkg/linuxuser"
 	"github.com/spf13/cobra"
 )
 
@@ -30,12 +30,12 @@ var removeCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := user.Delete(username, !keepHomedir); err != nil {
+		if err := linuxuser.Delete(username, !keepHomedir); err != nil {
 			fmt.Printf("\nfailed to remove user: %s\n", err)
 			os.Exit(1)
 		}
 
-		if err := user.RemoveSudo(username); err != nil {
+		if err := linuxuser.RemoveSudo(username); err != nil {
 			fmt.Printf("\nfailed to clean up sudoers: %s\n", err)
 		}
 

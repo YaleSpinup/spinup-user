@@ -1,4 +1,4 @@
-package user
+package linuxuser
 
 import (
 	"errors"
@@ -6,9 +6,23 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"strings"
 )
 
+// We make "admin" users by giving them full sudo privileges to run any command with no password by default.
+// We create a separate file for each user in the sudoersDir which has the default sudo rule. This way we can
+// later simply check if a file exists for a user to know if they are admin. It also allows users to manually
+// tweak the sudo rule in a file, if needed, without affecting the functionality.
+// Obviously, this won't work seamlessly with any pre-existing sudo users but the different ways to set
+// sudo permissions are too many so we choose to ignore those and only manage users created by this CLI.
+// However, we implement an additional check for sudo privileges if a file doesn't exist for a user by calling
+// sudo -l and checking the output for the default sudo rule (it has to be an exact match).
+
+// location of sudoers includedir
 const sudoersDir = "/etc/sudoers.d"
+
+// by default we allow admin users to sudo as anyone and run all commands with no password
+const sudoersPrivs = "(ALL) NOPASSWD: ALL"
 
 // HasSudo returns true if the Linux user has sudo privileges
 func HasSudo(username string) (bool, error) {
@@ -30,7 +44,8 @@ func HasSudo(username string) (bool, error) {
 	// we just check that a file exists for that user in the sudoers dir
 	sudoer, err := os.Stat(sudoersFile)
 	if os.IsNotExist(err) {
-		return false, nil
+		// but if the file doesn't exist we'll do a real check with the sudo command
+		return sudoUserCheck(username, sudoersPrivs)
 	} else if err != nil {
 		return false, err
 	}
@@ -76,8 +91,8 @@ func UpdateSudo(username string, admin bool) error {
 		return errors.New("unable to get user information for " + username)
 	}
 
-	// use full sudo privileges without password
-	sudoersCmd := fmt.Sprintf("%s ALL=(ALL:ALL) NOPASSWD: ALL\n", username)
+	// give the user sudo privileges on all hosts
+	sudoersCmd := fmt.Sprintf("%s ALL=%s\n", username, sudoersPrivs)
 	sudoersFile := fmt.Sprintf("%s/%s", sudoersDir, username)
 
 	if admin {
@@ -93,4 +108,14 @@ func UpdateSudo(username string, admin bool) error {
 	}
 
 	return nil
+}
+
+// sudoUserCheck checks if the user has the specified sudo privileges by running "sudo -l"
+func sudoUserCheck(username, privs string) (bool, error) {
+	out, err := exec.Command("sudo", "-l", "-U", username).Output()
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(string(out), privs), nil
 }

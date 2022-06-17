@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/YaleSpinup/spinup-user/pkg/user"
+	"github.com/YaleSpinup/spinup-user/pkg/linuxuser"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +39,7 @@ var addCmd = &cobra.Command{
 					break
 				}
 
-				if !user.ValidAuthorizedKey(line) {
+				if !linuxuser.ValidAuthorizedKey(line) {
 					fmt.Printf("\ninvalid public key specified:\n%s\n", line)
 					os.Exit(1)
 				}
@@ -59,13 +59,13 @@ var addCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := user.Create(username, shell); err != nil {
+		if err := linuxuser.Create(username, shell); err != nil {
 			fmt.Printf("\nfailed to add new user: %s\n", err)
 			os.Exit(1)
 		}
 
 		if !nokeys {
-			if err := user.UpdateAuthorizedKeys(username, pubKeys); err != nil {
+			if err := linuxuser.UpdateAuthorizedKeys(username, pubKeys); err != nil {
 				fmt.Printf("\nfailed to set authorized_keys: %s\n", err)
 				// TODO: delete user
 				os.Exit(1)
@@ -73,7 +73,7 @@ var addCmd = &cobra.Command{
 		}
 
 		if admin {
-			if err := user.UpdateSudo(username, admin); err != nil {
+			if err := linuxuser.UpdateSudo(username, admin); err != nil {
 				fmt.Printf("\nfailed to set sudo privileges: %s\n", err)
 				os.Exit(1)
 			}

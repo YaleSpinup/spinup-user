@@ -28,8 +28,12 @@ var listCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			for _, user := range users {
-				fmt.Println(user)
+			for username, details := range users {
+				if details.Admin {
+					fmt.Printf("%s (admin)\n", username)
+				} else {
+					fmt.Println(username)
+				}
 			}
 		} else {
 			// get information about a specific user

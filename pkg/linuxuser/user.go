@@ -17,26 +17,14 @@ import (
 type Details struct {
 	Admin    bool
 	Username string
+	Shell    string
 	HomeDir  string
 	Uid      string
 	Gid      string
 }
 
 func (d Details) String() string {
-	return fmt.Sprintf("Username: %s\nAdmin: %t\nHomedir: %s\nUID: %s\nGID: %s\n", d.Username, d.Admin, d.HomeDir, d.Uid, d.Gid)
-}
-
-type ListItem struct {
-	Username string
-	Admin    bool
-}
-
-func (li ListItem) String() string {
-	if li.Admin {
-		return fmt.Sprintf("%s (admin)", li.Username)
-	} else {
-		return li.Username
-	}
+	return fmt.Sprintf("Username: %s\nAdmin: %t\nShell: %s\nHomedir: %s\nUID: %s\nGID: %s\n", d.Username, d.Admin, d.Shell, d.HomeDir, d.Uid, d.Gid)
 }
 
 // Create uses the useradd executable to create a new Linux user
@@ -95,37 +83,28 @@ func Delete(username string, removeHomedir bool) error {
 	return nil
 }
 
-// Get returns information about the specified user
+// Get returns details about the specified user
 func Get(username string) (*Details, error) {
 	if username == "" {
 		return nil, errors.New("username cannot be empty")
 	}
 
-	user, err := user.Lookup(username)
-	if err != nil {
-		return nil, errors.New("unable to get user information for " + username)
-	}
-
-	admin, err := HasSudo(username)
+	userMap, err := List()
 	if err != nil {
 		return nil, err
 	}
 
-	details := Details{
-		Admin:    admin,
-		Username: user.Username,
-		HomeDir:  user.HomeDir,
-		Uid:      user.Uid,
-		Gid:      user.Gid,
+	user, found := userMap[username]
+	if !found {
+		return nil, errors.New("unable to find user " + username + " in list of regular users")
 	}
 
-	return &details, nil
+	return &user, nil
 }
 
-// List gets a list of all "human" Linux users
-func List() ([]ListItem, error) {
-	var users []string
-	userList := []ListItem{}
+// List gets a map of all "human" Linux users details from /etc/passwd
+func List() (map[string]Details, error) {
+	userMap := make(map[string]Details)
 
 	file, err := os.Open("/etc/passwd")
 	if err != nil {
@@ -144,30 +123,30 @@ func List() ([]ListItem, error) {
 			continue
 		}
 
-		passwdFields := strings.Split(line, ":")
-		if len(passwdFields) < 5 {
+		flds := strings.Split(line, ":")
+		if len(flds) < 5 {
 			continue
 		}
 
 		// only pick users that have a valid shell in /etc/passwd
-		// e.g. tester:x:1000:1000::/home/tester:/bin/bash
-		if contains(shells(), passwdFields[len(passwdFields)-1]) && passwdFields[0] != "root" {
-			users = append(users, passwdFields[0])
+		// e.g. tester:x:1000:1000:Full Name:/home/tester:/bin/bash
+		if contains(shells(), flds[len(flds)-1]) && flds[0] != "root" {
+			admin, _ := HasSudo(flds[0])
+			userMap[flds[0]] = Details{
+				Admin:    admin,
+				Username: flds[0],
+				Shell:    flds[6],
+				HomeDir:  flds[5],
+				Uid:      flds[2],
+				Gid:      flds[3],
+			}
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
-	for _, u := range users {
-		admin, err := HasSudo(u)
-		if err != nil {
-			return nil, err
-		}
-		userList = append(userList, ListItem{Username: u, Admin: admin})
-	}
-
-	return userList, nil
+	return userMap, nil
 }
 
 // AuthorizedKeys gets the SSH authorized keys for the given Linux user

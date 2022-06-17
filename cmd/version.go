@@ -19,7 +19,7 @@ var versionCmd = &cobra.Command{
 	Short: "Show the current version",
 	Long:  `Displays version and build information`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("brbr version: %s\ngit commit: %s\nbuildtime: %s\n", Ver.AppVersion, Ver.GitCommit, Ver.BuildTime)
+		fmt.Printf("spinup-user version: %s\ngit commit: %s\nbuildtime: %s\n", Ver.AppVersion, Ver.GitCommit, Ver.BuildTime)
 	},
 }
 

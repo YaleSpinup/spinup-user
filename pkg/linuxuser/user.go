@@ -62,6 +62,14 @@ func Delete(username string, removeHomedir bool) error {
 		return errors.New("username cannot be empty")
 	}
 
+	userMap, err := List()
+	if err != nil {
+		return err
+	}
+	if _, found := userMap[username]; !found {
+		return errors.New("unable to find user " + username + " in list of regular users")
+	}
+
 	if _, err := exec.LookPath("userdel"); err != nil {
 		return errors.New("didn't find 'userdel' executable: make sure it's installed and in the current PATH")
 	}

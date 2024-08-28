@@ -28,7 +28,6 @@ func (d Details) String() string {
 }
 
 // Create uses the useradd executable to create a new Linux user
-// Create uses the useradd executable to create a new Linux user
 func Create(username, shell string) error {
 	if username == "" || shell == "" {
 		return errors.New("username and shell cannot be empty")

@@ -28,6 +28,7 @@ func (d Details) String() string {
 }
 
 // Create uses the useradd executable to create a new Linux user
+// Create uses the useradd executable to create a new Linux user
 func Create(username, shell string) error {
 	if username == "" || shell == "" {
 		return errors.New("username and shell cannot be empty")
@@ -47,10 +48,16 @@ func Create(username, shell string) error {
 	useraddCmd := exec.Command("useradd", useraddArgs...)
 	useraddCmd.Stderr = os.Stderr
 
-	// log.Printf("running command: %v", useraddCmd)
-
 	if err := useraddCmd.Run(); err != nil {
 		return err
+	}
+
+	// Set password expiry to never
+	chageCmd := exec.Command("chage", "-m", "0", "-M", "99999", "-I", "-1", "-E", "-1", username)
+	chageCmd.Stderr = os.Stderr
+
+	if err := chageCmd.Run(); err != nil {
+		return fmt.Errorf("failed to set password expiry: %v", err)
 	}
 
 	return nil

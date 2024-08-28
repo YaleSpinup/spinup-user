@@ -15,6 +15,7 @@ Available Commands:
   add         Add a new user and set SSH authorized keys
   help        Help about any command
   list        List existing users and their SSH keys
+  promote     Promote an existing user to admin status
   remove      Remove an existing user
   version     Show the current version
 
@@ -82,6 +83,15 @@ $ sudo spinup-user remove alice
 Removed user alice
 ```
 
+### Promoting a user to admin status
+
+To promote an existing user to admin status (granting them sudo privileges):
+
+```
+$ sudo spinup-user promote bob
+Successfully promoted bob to admin status
+```
+
 ## Author
 
 Tenyo Grozev <tenyo.grozev@yale.edu>
@@ -90,3 +100,4 @@ Tenyo Grozev <tenyo.grozev@yale.edu>
 
 GNU Affero General Public License v3.0 (GNU AGPLv3)
 Copyright (c) 2022 Yale University
+

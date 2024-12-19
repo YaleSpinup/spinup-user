@@ -23,7 +23,7 @@ jobs:
         uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf
         with:
           # Specify the version if needed, or use 'latest' for the most recent version
-          version: latest
+          version: ''~> v6'
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

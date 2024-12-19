@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: '1.23'  # Adjust this to your project's Go version
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf
         with:
           # Specify the version if needed, or use 'latest' for the most recent version
           version: latest
